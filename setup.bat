@@ -1,0 +1,9 @@
+@echo off
+echo Створюємо віртуальне середовище...
+python -m venv venv
+echo Активація...
+call venv\Scripts\activate
+echo Встановлення бібліотек...
+pip install -r requirements.txt
+echo Все готово! Для запуску пиши: venv\Scripts\activate
+pause
