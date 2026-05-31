@@ -4,8 +4,6 @@ import os
 
 DIR_PATH = os.path.dirname(os.path.abspath(__file__))
 
-#def weights_file_exist(root_weight str, root_dir: str = DIR_PATH) -> str:
- #   for 
 class SimpleNet(nn.Module): 
     def __init__(self):
         super().__init__()
@@ -29,7 +27,7 @@ def get_model(device: torch.device, train_mode: bool = True, weights_path: str |
 
     if weights_path is not None:
         if not os.path.isfile(weights_path):
-            raise FileNotFoundError(f"{weights_path} - not found")
+            raise FileNotFoundError(f"{weights_path} - file not found")
         weights = torch.load(weights_path, map_location=device)
         model.load_state_dict(weights)
 

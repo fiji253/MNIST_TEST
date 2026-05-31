@@ -5,6 +5,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
+import set_model as model_factory
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
@@ -14,18 +15,8 @@ MODEL_SAVE_PATH = os.path.join(BASE_DIR, 'mnist_model.pth')
 
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-class SimpleNet(nn.Module): 
-    def __init__(self):
-        super(SimpleNet, self).__init__()
-        self.fc1 = nn.Linear(784, 128)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(128, 10)
-        
-    def forward(self, x):
-        x = x.view(-1, 784)
-        return self.fc2(self.relu(self.fc1(x)))
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model_factory.get_model(train_mode=True, weights_path=None, device=device)
 transform = transforms.Compose([
     transforms.ToTensor(), 
     transforms.Normalize((0.1307,), (0.3081,))
@@ -42,7 +33,6 @@ except Exception as e:
     print(f"Origin mistake: {e}")
     exit()
 
-model = SimpleNet().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.1)
 criterion = nn.CrossEntropyLoss()
@@ -51,14 +41,13 @@ history = {'loss': [], 'acc': [], 'lr': []}
 
 print("\nstart...")
 for epoch in range(1, 6):
-    model.train()
     running_loss, correct, total = 0.0, 0, 0
     
     for batch_idx, (data, target) in enumerate(train_loader):
         data = data.to(device)
         target = target.to(device)
         optimizer.zero_grad()
-        output = model.forward(data)
+        output = model(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
