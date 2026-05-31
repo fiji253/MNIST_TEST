@@ -6,41 +6,17 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
 import os
-
+import set_model as model_factory
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
-
 MODEL_PATH = os.path.join(BASE_DIR, 'mnist_model.pth')
-
-
-class SimpleNet(nn.Module):
-    def __init__(self):
-        super(SimpleNet, self).__init__()
-
-        self.fc1 = nn.Linear(784, 128)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(128, 10)
-
-    def forward(self, x):
-        x = x.view(-1, 784)
-        return self.fc2(self.relu(self.fc1(x)))
-
-
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-model = SimpleNet().to(device)
-
-model.load_state_dict(
-    torch.load(MODEL_PATH, map_location=device)
-)
-
-model.eval()
+model = model_factory.get_model(device=device, train_mode=False, weights_path=MODEL_PATH)
 
 print(f"Model loaded: {MODEL_PATH}")
-
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -74,7 +50,6 @@ display_image = image
 tensor = transform(image)
 tensor = tensor.to(device)
 
-
 with torch.no_grad():
 
     output = model(tensor)
@@ -85,11 +60,9 @@ with torch.no_grad():
 
     confidence = probabilities[0][predicted_class].item() * 100
 
-
 print("\n=== Result ===")
 print(f"Predicted digit: {predicted_class}")
 print(f"Confidence: {confidence:.2f}%")
-
 
 plt.imshow(display_image, cmap='gray')
 plt.title(

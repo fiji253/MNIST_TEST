@@ -8,7 +8,7 @@ DIR_PATH = os.path.dirname(os.path.abspath(__file__))
  #   for 
 class SimpleNet(nn.Module): 
     def __init__(self):
-        super(SimpleNet, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(784, 128)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(128, 10) 
@@ -23,12 +23,12 @@ class SimpleNet(nn.Module):
        # else:
         #    self.eval() 
         
-def get_model(train_mode: bool = True, weights_path: str | None = None) -> SimpleNet:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def get_model(device: torch.device, train_mode: bool = True, weights_path: str | None = None) -> SimpleNet:
+
     model = SimpleNet().to(device)
 
     if weights_path is not None:
-        if not os.path.exists(weights_path):
+        if not os.path.isfile(weights_path):
             raise FileNotFoundError(f"{weights_path} - not found")
         weights = torch.load(weights_path, map_location=device)
         model.load_state_dict(weights)
