@@ -5,7 +5,6 @@ env/
 __pycache__/
 *.pyc
 
-data/
 results/
 mnist_images/
 mnist_test_samples/
