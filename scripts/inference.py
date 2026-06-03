@@ -1,20 +1,38 @@
 import torch
-import torch.nn as nn
 from torchvision import transforms
-from PIL import Image, ImageOps
+from PIL import Image
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import matplotlib.pyplot as plt
 import os
 import set_model as model_factory
+import argparse
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
-MODEL_PATH = os.path.join(BASE_DIR, 'mnist_model.pth')
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--model",
+    choices=["simple", "vgg"],
+    required=True,
+    help="Model architecture to use"
+)
+
+parser.add_argument(
+    "--image",
+    required=False,
+    help="Path to input image"
+)
+
+args = parser.parse_args()
+
+MODEL_NAME = args.model
+MODEL_PATH = os.path.join(BASE_DIR, f"mnist_{MODEL_NAME}.pth")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = model_factory.get_model(device=device, train_mode=False, weights_path=MODEL_PATH)
+model = model_factory.get_model(device=device, model_name = MODEL_NAME, train_mode=False, weights_path=MODEL_PATH)
 
 print(f"Model loaded: {MODEL_PATH}")
 
@@ -23,16 +41,23 @@ transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
-root = tk.Tk()
-root.withdraw()
+if args.image:
+    file_path = args.image
+else:
+    root = tk.Tk()
+    root.withdraw()
 
-file_path = filedialog.askopenfilename(
-    title="Select the image",
-    filetypes=[
-        ("Image files", "*.png *.jpg *.jpeg *.bmp"),
-        ("All files", "*.*")
-    ]
-)
+    file_path = filedialog.askopenfilename(
+        title="Select the image",
+        filetypes=[
+            ("Image files", "*.png *.jpg *.jpeg *.bmp"),
+            ("All files", "*.*")
+        ]
+    )
+
+    if not file_path:
+        messagebox.showinfo("Info", "File wasn't chosen")
+        exit()
 
 if not file_path:
     messagebox.showinfo("Info", "File was`t chosen")
@@ -48,6 +73,7 @@ image = image.resize((28, 28), resample=1)
 print(f"Mode: {image.mode}, size:{image.size}")
 display_image = image
 tensor = transform(image)
+tensor = tensor.unsqueeze(0)
 tensor = tensor.to(device)
 
 with torch.no_grad():

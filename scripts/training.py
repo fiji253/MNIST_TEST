@@ -6,17 +6,31 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import os
 import set_model as model_factory
+import argparse
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 RESULTS_DIR = os.path.join(BASE_DIR, 'results')
-MODEL_SAVE_PATH = os.path.join(BASE_DIR, 'mnist_model.pth')
+
 
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--model",
+    choices=["simple", "vgg"],
+    required=True,
+    help="Model architecture to train"
+)
+
+args = parser.parse_args()
+
+MODEL_NAME = args.model
+MODEL_SAVE_PATH = os.path.join(BASE_DIR, f"mnist_{MODEL_NAME}.pth")
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = model_factory.get_model(train_mode=True, weights_path=None, device=device)
+model = model_factory.get_model(train_mode=True, model_name = MODEL_NAME, weights_path=None, device=device)
 transform = transforms.Compose([
     transforms.ToTensor(), 
     transforms.Normalize((0.1307,), (0.3081,))
