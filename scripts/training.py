@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import os
 import set_model as model_factory
 import argparse
+from torch.utils.data import random_split
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
@@ -38,7 +39,13 @@ transform = transforms.Compose([
 
 try:
     train_dataset = datasets.MNIST(root=DATA_DIR, train=True, download=False, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+    total_len = len(train_dataset)
+    train_count = int(total_len * 0.7)
+    #valid_count = int(total_len * 0.3)
+    valid_count = total_len - train_count
+    train_set, valid_set = random_split(train_dataset, [train_count, valid_count])
+    train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
+    valid_loader = DataLoader(valid_set, batch_size=64, shuffle=False)
     print(f"Succsess saving {len(train_dataset)} pictures.")
     print(f"Use the path: {DATA_DIR}")
 except Exception as e:
@@ -51,12 +58,12 @@ optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.1)
 criterion = nn.CrossEntropyLoss()
 
-history = {'loss': [], 'acc': [], 'lr': []}
+history = {'loss': [], 'acc': [], 'lr': [], 'val_loss': [], 'val_acc': []}
 
 print("\nstart...")
 for epoch in range(1, 6):
     running_loss, correct, total = 0.0, 0, 0
-    
+    model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data = data.to(device)
         target = target.to(device)
@@ -65,7 +72,7 @@ for epoch in range(1, 6):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        
+    
         running_loss += loss.item()
         _, predicted = output.max(1)
         total += target.size(0)
@@ -74,31 +81,62 @@ for epoch in range(1, 6):
     epoch_loss = running_loss / len(train_loader)
     epoch_acc = 100. * correct / total
     current_lr = optimizer.param_groups[0]['lr']
-    
+
+    model.eval()
+    valid_running_loss, valid_total, valid_correct = 0.0, 0, 0
+    with torch.no_grad():                                                                                   # ?
+            for valid_batch_index, (valid_data, valid_target) in enumerate(valid_loader):
+                valid_data = valid_data.to(device)
+                valid_target = valid_target.to(device)
+                valid_output = model(valid_data)
+                valid_loss = criterion(valid_output, valid_target)
+
+                valid_running_loss += valid_loss.item()
+                _, valid_predicted = valid_output.max(1)
+
+                valid_total += valid_target.size(0)
+                valid_correct += valid_predicted.eq(valid_target).sum().item()
+
+    valid_epoch_loss = valid_running_loss / len(valid_loader)
+    valid_epoch_acc = 100.0 * valid_correct / valid_total
+
     history['loss'].append(epoch_loss)
     history['acc'].append(epoch_acc)
     history['lr'].append(current_lr)
+    history['val_loss'].append(valid_epoch_loss)
+    history['val_acc'].append(valid_epoch_acc)
     
-    print(f'Epoch {epoch}: Loss: {epoch_loss:.4f}, Acc: {epoch_acc:.2f}%, LR: {current_lr}')
-    scheduler.step()
+    print(
+    f'Epoch {epoch}: '
+    f'Train Loss: {epoch_loss:.4f}, '
+    f'Train Acc: {epoch_acc:.2f}%, '
+    f'Valid Loss: {valid_epoch_loss:.4f}, '
+    f'Valid Acc: {valid_epoch_acc:.2f}%, '
+    f'LR: {current_lr}'
+    )
+    scheduler.step()                                                                                        # ?
 
 epochs_range = range(1, len(history['loss']) + 1)
 
-plt.figure(figsize=(18, 5))
+plt.figure(figsize=(24, 5))
 
 plt.subplot(1, 3, 1)
 plt.plot(epochs_range, history['loss'], 'r-o', label='Loss')
+plt.plot(epochs_range, history['val_loss'], marker = 'o', label='Val_Loss')
 plt.title('Training Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.grid(True)
+plt.legend()
 
 plt.subplot(1, 3, 2)
 plt.plot(epochs_range, history['acc'], 'g-s', label='Accuracy')
+plt.plot(epochs_range, history['val_acc'], '-o', label='Val_Accuracy')
 plt.title('Training Accuracy (%)')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy %')
 plt.grid(True)
+plt.legend()
 
 plt.subplot(1, 3, 3)
 plt.plot(epochs_range, history['lr'], 'b-^', label='LR')
