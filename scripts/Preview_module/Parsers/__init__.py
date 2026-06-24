@@ -1,5 +1,5 @@
 from parser_registry import ParserRegistry
-import yolo_parser as YoloParser 
+from .yolo_parser import YOLO_Parser
 
 
-ParserRegistry.register("yolo", YoloParser)
+ParserRegistry.register("yolo", YOLO_Parser)

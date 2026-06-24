@@ -22,7 +22,7 @@ class ParserRegistry:
         if name in cls.parsers:
             raise ValueError(f"Parser already registered: {name}")
         
-        cls.parsers[name] = AbstractParser
+        cls.parsers[name] = parser_class
     
     @classmethod
     def create(cls, name: str, *args, **kwargs):

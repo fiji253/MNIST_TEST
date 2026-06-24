@@ -8,6 +8,7 @@ __pycache__/
 results/
 mnist_images/
 mnist_test_samples/
+test_data/
 
 *.pth
 *.pt

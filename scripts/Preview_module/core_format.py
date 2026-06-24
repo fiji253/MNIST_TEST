@@ -1,5 +1,7 @@
 from pathlib import Path
+from dataclasses import dataclass
 
+@dataclass
 class Box:
     class_id: int
     class_name: str
@@ -8,9 +10,8 @@ class Box:
     xmax: float
     ymax: float
 
-    def __init__(self):
-        pass
 
+@dataclass
 class AnnotationSample:
     image_path: Path
     width: int
