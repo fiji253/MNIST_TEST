@@ -11,6 +11,12 @@ import argparse
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(SCRIPT_DIR)
 
+#if __name__ == '__main__':
+ #   main()
+
+def main():
+    pass
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--model",

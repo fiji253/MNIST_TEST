@@ -26,27 +26,52 @@ class MiniVGG(nn.Module):
         super().__init__()
 
         self.features = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=3, padding=1),
+            nn.Conv2d(1, 64, kernel_size=3, padding=1),
             nn.ReLU(),
-
-            nn.Conv2d(32, 32, kernel_size=3, padding=1),
-            nn.ReLU(),
-
-            nn.MaxPool2d(kernel_size=2, stride=2),
-
-            nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
             nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
 
-            nn.MaxPool2d(kernel_size=2, stride=2)
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.ReLU(),
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(64 * 7 * 7, 128),
+            nn.Linear(512 * 1 * 1, 4096),
             nn.ReLU(),
-            nn.Linear(128, 10)
+            nn.Dropout(0.5),
+
+            nn.Linear(4096, 4096),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+
+            nn.Linear(4096, 10)
         )
 
     def forward(self, x):
@@ -62,6 +87,8 @@ def get_model(device: torch.device, model_name: str, train_mode: bool = True, we
 
     elif model_name == "vgg":
         model = MiniVGG()
+    else:
+        raise "Wrong keyword... "  # TODDO !!!
 
     model = model.to(device)
 

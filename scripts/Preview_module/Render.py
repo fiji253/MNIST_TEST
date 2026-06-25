@@ -1,78 +1,91 @@
-from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+import cv2
 
 from core_format import AnnotationSample
-from validator import BoxValidator
 
 
 class PreviewRenderer:
-    def draw_every_n(
-        self,
-        samples: list[AnnotationSample],
-        every: int = 10,
-        max_previews: int = 30
-    ):
-        shown = 0
 
-        for index, sample in enumerate(samples, start=1):
-            if index % every != 0:
-                continue
+    def draw_sample(self, sample: AnnotationSample) -> bool:
+        image = cv2.imread(str(sample.image_path))
 
-            self.draw_sample(sample)
-            shown += 1
-
-            if shown >= max_previews:
-                break
-
-    def draw_sample(self, sample: AnnotationSample):
-        image = Image.open(sample.image_path).convert("RGB")
-
-        fig, ax = plt.subplots(1, figsize=(12, 8))
-
-        ax.imshow(image)
-        ax.set_title(
-            f"{sample.image_path.name} | "
-            f"{sample.width}x{sample.height} | "
-            f"boxes: {len(sample.boxes)}"
-        )
-        ax.axis("off")
+        if image is None:
+            print(f"[WARN] cannot open image: {sample.image_path}")
+            return True
 
         for box in sample.boxes:
-            problems = BoxValidator.validate_box(sample, box)
+            xmin = int(box.xmin)
+            ymin = int(box.ymin)
+            xmax = int(box.xmax)
+            ymax = int(box.ymax)
 
-            edge_color = "red" if problems else "lime"
-            label_bg_color = "red" if problems else "green"
-
-            rect_width = box.xmax - box.xmin
-            rect_height = box.ymax - box.ymin
-
-            rectangle = patches.Rectangle(
-                (box.xmin, box.ymin),
-                rect_width,
-                rect_height,
-                linewidth=2,
-                edgecolor=edge_color,
-                facecolor="none"
+            cv2.rectangle(
+                image,
+                (xmin, ymin),
+                (xmax, ymax),
+                color=(0, 255, 0),
+                thickness=2
             )
 
-            ax.add_patch(rectangle)
-
-            label_text = f"{box.class_name} ({box.class_id})"
-
-            if problems:
-                label_text += " | " + "; ".join(problems)
-
-            ax.text(
-                box.xmin,
-                max(box.ymin - 5, 0),
-                label_text,
-                fontsize=9,
-                color="white",
-                bbox=dict(
-                    facecolor=label_bg_color,
-                    alpha=0.75
-                )
+            cv2.putText(
+                image,
+                box.class_name,
+                (xmin, max(ymin - 5, 15)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2
             )
 
-        plt.show()
+        window_title = f"{sample.image_path.name} | boxes: {len(sample.boxes)}"
+
+        cv2.imshow(window_title, image)
+
+        key = cv2.waitKey(0)
+
+        cv2.destroyWindow(window_title)
+
+        if key == ord("q"):
+            return False
+
+        return True
+    
+    def draw_rect(self, samples: list [AnnotationSample], span: int, max_span: int):
+        if span <= 0:
+            raise ValueError("every must be greater than 0")
+        samples_list = 0
+
+        for index, sample in enumerate(samples, start=1):
+            if index % span != 0:
+                continue
+            drawn_image = self.draw_sample(sample)
+            samples_list.append(drawn_image)
+            samples_list += 1
+
+            if samples_list >= max_span:
+                break
+
+        cv2.destroyAllWindows()
+
+
+#    def draw_every_n(
+      #  self,
+     #   samples: list[AnnotationSample],
+    #    every: int = 10,
+   #     max_previews: int = 30
+  #  ):
+ #       shown = 0
+#
+   #     for index, sample in enumerate(samples, start=1):
+  #          if index % every != 0:
+ #               continue
+#
+  #          should_continue = self.draw_sample(sample)
+ #           shown += 1
+#
+  #          if not should_continue:
+ #               break
+#
+ #           if shown >= max_previews:
+#                break
+
+        #cv2.destroyAllWindows()

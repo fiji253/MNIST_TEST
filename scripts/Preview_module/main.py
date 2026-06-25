@@ -51,11 +51,11 @@ def main():
     args = parser.parse_args()
 
     annotation_parser = ParserRegistry.create(
-        args.format,
-        images_dir=args.images,
-        labels_dir=args.labels,
-        classes_path=args.classes
-    )
+    dataset.format,
+    images_dir=dataset.images_dir,
+    labels_dir=dataset.labels_dir,
+    classes_path=dataset.classes_path
+)
 
     samples = annotation_parser.parse()
 
