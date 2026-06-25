@@ -2,7 +2,7 @@ from pathlib import Path
 from dataset_layout import DatasetLayout
 
 
-DATASETS_ROOT = Path("datasets")
+DATASETS_ROOT = Path(__file__).resolve().parents[2]
 
 
 DATASET_REGISTRY = {

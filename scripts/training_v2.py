@@ -1,25 +1,72 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torchvision import transforms
-from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
-import os
+import cv2
+
+from core_format import AnnotationSample
 
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(SCRIPT_DIR)
-DATA_DIR = os.path.join(BASE_DIR, 'data')
-RESULTS_DIR = os.path.join(BASE_DIR, 'results')
-MODEL_SAVE_PATH = os.path.join(BASE_DIR, 'mnist_model.pth')
+class PreviewRenderer:
+    def draw_every_n(
+        self,
+        samples: list[AnnotationSample],
+        every: int = 10,
+        max_previews: int = 30
+    ):
+        shown = 0
 
-os.makedirs(RESULTS_DIR, exist_ok=True)
+        for index, sample in enumerate(samples, start=1):
+            if index % every != 0:
+                continue
 
-class SimpleNet(nn.Module):
-    def __init__(self):
-        super(SimpleNet, self).__init__()
-        self.fc1 = nn.Linear(784, 128)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(128, 10)
+            should_continue = self.draw_sample(sample)
+            shown += 1
 
-    
+            if not should_continue:
+                break
+
+            if shown >= max_previews:
+                break
+
+        cv2.destroyAllWindows()
+
+    def draw_sample(self, sample: AnnotationSample) -> bool:
+        image = cv2.imread(str(sample.image_path))
+
+        if image is None:
+            print(f"[WARN] cannot open image: {sample.image_path}")
+            return True
+
+        for box in sample.boxes:
+            xmin = int(box.xmin)
+            ymin = int(box.ymin)
+            xmax = int(box.xmax)
+            ymax = int(box.ymax)
+
+            cv2.rectangle(
+                image,
+                (xmin, ymin),
+                (xmax, ymax),
+                color=(0, 255, 0),
+                thickness=2
+            )
+
+            cv2.putText(
+                image,
+                box.class_name,
+                (xmin, max(ymin - 5, 15)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2
+            )
+
+        window_title = f"{sample.image_path.name} | boxes: {len(sample.boxes)}"
+
+        cv2.imshow(window_title, image)
+
+        key = cv2.waitKey(0)
+
+        cv2.destroyWindow(window_title)
+
+        if key == ord("q"):
+            return False
+
+        return True

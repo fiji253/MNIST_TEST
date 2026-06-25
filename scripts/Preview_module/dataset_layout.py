@@ -4,7 +4,7 @@ from pathlib import Path
 
 @dataclass
 class DatasetLayout:
-    name: str
+    name: str  # прибрати можна
     format: str
     root_dir: Path
     images_dir: Path

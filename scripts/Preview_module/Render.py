@@ -58,7 +58,7 @@ class PreviewRenderer:
             if index % span != 0:
                 continue
             drawn_image = self.draw_sample(sample)
-            samples_list.append(drawn_image)
+            samples_list.append(drawn_image)                                 # У числа немає .append() ?
             samples_list += 1
 
             if samples_list >= max_span:

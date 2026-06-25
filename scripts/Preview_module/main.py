@@ -2,37 +2,38 @@ import argparse
 
 import Parsers
 from parser_registry import ParserRegistry
-from Render import PreviewRenderer
+from render import PreviewRenderer
+from dataset_resolver import DatasetResolver
+from pathlib import Path
 
+# можна імпорт зробити потім з ямла
 
 def main():
+
+    PROJ_ROOT = Path(__file__).resolve().parents[2]
+    DATASET_PATH = "test_dataset_file"                     # шлях до датасету в корені проекту
+    FINAL_PATH = PROJ_ROOT.joinpath(DATASET_PATH)
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
         "--format",
         required=True,
-        choices=["yolo"],
         help="Annotation format"
     )
 
-    parser.add_argument(
-        "--images",
-        required=True,
-        help="Path to images directory"
-    )
+#    parser.add_argument(
+#        "--dataset",
+#        required=True,
+#        help="Dataset name from registry or path to dataset root"                  (на вмпадок консольного вводу)
+#    )
 
-    parser.add_argument(
-        "--labels",
-        required=True,
-        help="Path to labels directory"
-    )
-
-    parser.add_argument(
-        "--classes",
-        required=False,
-        default=None,
-        help="Path to classes.txt"
-    )
+#    parser.add_argument(
+#        "--classes",
+#        required=False,
+#        default=None,
+#        help="Path to classes.txt"
+#    )                                                                                 (на вмпадок необхіідності класів)
 
     parser.add_argument(
         "--every",
@@ -50,6 +51,13 @@ def main():
 
     args = parser.parse_args()
 
+    resolver = DatasetResolver()
+
+    dataset = resolver.resolve(
+        dataset=FINAL_PATH,                                                     #args.dataset, (на вмпадок консольного вводу)
+        format_name=args.format
+    )
+
     annotation_parser = ParserRegistry.create(
     dataset.format,
     images_dir=dataset.images_dir,
@@ -62,7 +70,7 @@ def main():
     print(f"[INFO] parsed samples: {len(samples)}")
 
     renderer = PreviewRenderer()
-    renderer.draw_every_n(
+    renderer.draw_rect(
         samples=samples,
         every=args.every,
         max_previews=args.max
