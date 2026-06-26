@@ -11,9 +11,9 @@ from pathlib import Path
 def main():
 
     PROJ_ROOT = Path(__file__).resolve().parents[2]
-    DATASET_PATH = "test_dataset_file"                     # шлях до датасету в корені проекту
+    DATASET_PATH = "train"                              # шлях до датасету в корені проекту
     FINAL_PATH = PROJ_ROOT.joinpath(DATASET_PATH)
-
+                                                        # краще додати ще вибір формату сюди
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -25,7 +25,7 @@ def main():
 #    parser.add_argument(
 #        "--dataset",
 #        required=True,
-#        help="Dataset name from registry or path to dataset root"                  (на вмпадок консольного вводу)
+#        help="Dataset name from registry or path to dataset root"                  (на випадок консольного вводу)
 #    )
 
 #    parser.add_argument(
@@ -33,7 +33,7 @@ def main():
 #        required=False,
 #        default=None,
 #        help="Path to classes.txt"
-#    )                                                                                 (на вмпадок необхіідності класів)
+#    )                                                                                 (на випадок необхіідності класів)
 
     parser.add_argument(
         "--every",
@@ -72,8 +72,8 @@ def main():
     renderer = PreviewRenderer()
     renderer.draw_rect(
         samples=samples,
-        every=args.every,
-        max_previews=args.max
+        span=args.every,
+        max_span=args.max
     )
 
 

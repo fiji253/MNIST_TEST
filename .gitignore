@@ -9,6 +9,7 @@ results/
 mnist_images/
 mnist_test_samples/
 test_data/
+train/
 
 *.pth
 *.pt

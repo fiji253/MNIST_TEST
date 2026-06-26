@@ -1,4 +1,6 @@
 import cv2
+from PIL import Image
+import numpy as np
 
 from core_format import AnnotationSample
 
@@ -6,8 +8,9 @@ from core_format import AnnotationSample
 class PreviewRenderer:
 
     def draw_sample(self, sample: AnnotationSample) -> bool:
-        image = cv2.imread(str(sample.image_path))
-
+        pil_image = Image.open(sample.image_path).convert("RGB")
+        image = np.array(pil_image)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         if image is None:
             print(f"[WARN] cannot open image: {sample.image_path}")
             return True
@@ -23,7 +26,7 @@ class PreviewRenderer:
                 (xmin, ymin),
                 (xmax, ymax),
                 color=(0, 255, 0),
-                thickness=2
+                thickness=1
             )
 
             cv2.putText(
@@ -36,13 +39,13 @@ class PreviewRenderer:
                 2
             )
 
-        window_title = f"{sample.image_path.name} | boxes: {len(sample.boxes)}"
+        window_title = "Dataset Preview" #f"{sample.image_path.name} | boxes: {len(sample.boxes)}"
 
         cv2.imshow(window_title, image)
 
         key = cv2.waitKey(0)
 
-        cv2.destroyWindow(window_title)
+        #cv2.destroyWindow(window_title)
 
         if key == ord("q"):
             return False
@@ -58,8 +61,10 @@ class PreviewRenderer:
             if index % span != 0:
                 continue
             drawn_image = self.draw_sample(sample)
-            samples_list.append(drawn_image)                                 # У числа немає .append() ?
-            samples_list += 1
+            if not drawn_image:
+                break
+            #samples_list.append(drawn_image)                                 # У числа немає .append() ?
+            drawn_image += 1
 
             if samples_list >= max_span:
                 break
